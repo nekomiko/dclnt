@@ -1,8 +1,9 @@
 # Natural language statistics tool for Python projects.
 Following instruments is able to calulate some word-metrics for python project.
 ### Usage
-Statistics is calculated by PyWordStat class like following:
+Statistics are calculated by PyWordStat class like following:
 ```
+from dclnt.dclnt import PyWordStat
 django_stat = PyWordStat("lib/python3.5/site-packages/django")
 print(django_stat.get_top_verbs())
 ```
