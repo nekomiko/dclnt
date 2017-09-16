@@ -102,6 +102,10 @@ class PyWordStat:
         return flat([split_snake_case_name_to_words(function_name)
                      for function_name in function_names])
 
+    def get_top_words(self, top_size=10):
+        '''Returns statistics of most common words used in identifiers'''
+        return get_top(self.get_all_words(), top_size)
+
     def get_all_verbs(self):
         '''Returns list of all verbs occuring in
         function names of project'''
