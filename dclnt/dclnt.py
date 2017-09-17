@@ -31,8 +31,8 @@ def is_verb(word):
     return pos_info[0][1] == 'VB'
 
 
-def get_top(iter, top_size=10):
-        return collections.Counter(iter).most_common(top_size)
+def get_top(_iter, top_size=10):
+        return collections.Counter(_iter).most_common(top_size)
 
 
 class PyWordStat:
@@ -43,21 +43,15 @@ class PyWordStat:
         '''path: path to python project for which calculate statistics'''
         self.path = path
 
-    def get_trees(self, with_filenames=False, with_file_content=False):
+    def get_trees(self):
         '''Returns list of abstract syntax trees
-        for every .py file in self.path.
-        If any of boolean parameters are true
-        returns list of tuples in order (file_name, file_content, tree)
-        with_filenames: include file_name
-        with_file_content: include file content'''
+        for every .py file in self.path.'''
         filenames = []
         trees = []
         for dirname, dirs, files in os.walk(self.path, topdown=True):
             for file in files:
                 if file.endswith('.py'):
                     filenames.append(os.path.join(dirname, file))
-                    # if len(filenames) == 100:
-                    #    break
         print('total %s files' % len(filenames))
         for filename in filenames:
             with open(filename, 'r', encoding='utf-8') as attempt_handler:
@@ -67,15 +61,7 @@ class PyWordStat:
             except SyntaxError as e:
                 print(e)
                 tree = None
-            if with_filenames or with_file_content:
-                t_tree = (tree,)
-                if with_file_content:
-                    t_tree = (main_file_content, ) + t_tree
-                if with_filenames:
-                    t_tree = (filename, ) + t_tree
-                trees.append(t_tree)
-            else:
-                trees.append(tree)
+            trees.append(tree)
         print('trees generated')
         return trees
 
