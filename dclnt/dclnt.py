@@ -2,6 +2,9 @@ import ast
 import os
 import collections
 from itertools import chain
+import json
+import csv
+import io
 
 from nltk import pos_tag, download, data
 from git import Repo, GitCommandError
@@ -102,6 +105,8 @@ class BaseWordStat:
             return self.get_name_sample(ps, "local" in param)
         elif sample_sort == "func_whole":
             return self.get_func_all()
+        elif sample_sort == "name_whole":
+            return self.get_name_all("local" in param)
 
     def get_top_generic(self, sample_sort, ps=None, param={}, top_size=10):
         return get_top(self.get_sample_generic(sample_sort, ps, param),
@@ -160,9 +165,7 @@ class LocalPyWordStat(BaseWordStat):
 
 class RemotePyWordStat(LocalPyWordStat):
     def __init__(self, repo_path):
-        if repo_path.startswith("http://") or \
-                repo_path.startswith("https://") or \
-                repo_path.startswith("ssh://"):
+        if repo_path.startswith(("http://", "https://", "ssh://")):
             repo_path = repo_path.strip("/")
             path = os.path.join(os.getcwd(), repo_path.split("/")[-1])
             try:
@@ -185,10 +188,23 @@ class ReportGenerator:
                  ps="VB", param={}, top_size=10):
         words = list(self.word_stat.get_sample_generic(sample_sort, ps, param))
         if format == "console":
+            output_l = []
             out_s = 'total {} words, {} unique'
-            print(out_s.format(len(words), len(set(words))))
+            output_l.append(out_s.format(len(words), len(set(words))))
             for word, occurence in get_top(words, top_size):
-                print(word, occurence)
+                output_l.append("{} {}".format(word, occurence))
+            return "\n".join(output_l)
+        if format == "json":
+            json_summ = {"all": len(words), "unique": len(set(words))}
+            json_stat = get_top(words, top_size)
+            json_dict = {"summary": json_summ, "statistics": json_stat}
+            return json.dumps(json_dict)
+        if format == "csv":
+            output = io.StringIO()
+            csvdata = get_top(words, top_size)
+            writer = csv.writer(output)
+            writer.writerows(csvdata)
+            return output.getvalue()
 
 
 def print_proj_stats():
@@ -198,9 +214,9 @@ def print_proj_stats():
     project = 'django'
     path = os.path.join('.', project)
     proj_rep = ReportGenerator(path)
-    proj_rep.generate("console", "func_split", "VB")
-    proj_rep.generate("console", "func_whole")
-    proj_rep.generate("console", "name_split", "NN", ["local"])
+    print(proj_rep.generate("json", "func_split", "VB"))
+    print(proj_rep.generate("csv", "func_whole"))
+    print(proj_rep.generate("console", "name_split", "NN", ["local"]))
 
 # Download NLTK package if not installed
 if not data.find('taggers/averaged_perceptron_tagger'):
