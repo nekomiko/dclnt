@@ -4,6 +4,7 @@ import collections
 from itertools import chain
 
 from nltk import pos_tag, download, data
+from git import Repo, GitCommandError
 
 
 # Trivial helper functions.
@@ -89,35 +90,25 @@ class BaseWordStat:
         as word in function names of project'''
         return self.extract_words_from_ids(self.get_func_all(), ps)
 
-#    def get_func_verbs(self):
-#        return self.get_func_sample("VB")
-
-#    def get_func_nouns(self):
-#        return self.get_func_sample("NN")
-
-#    def get_top_func_verbs(self, top_size=10):
-#        '''Returns statistics of most common verbs in function names
-#        in project'''
-#        return get_top(self.get_all_func_ps("VB"), top_size)
-
-    def get_top_functions_names(self, top_size=10):
+    def get_top_func_all(self, top_size=10):
         '''Returns statistics of most common function names
         in project'''
         return get_top(self.get_all_func(), top_size)
 
-    def get_sample_generic(self, sort, ps=None, param={}):
-        if sort == "func_split":
+    def get_sample_generic(self, sample_sort, ps=None, param={}):
+        if sample_sort == "func_split":
             return self.get_func_sample(ps)
-        elif sort == "name_split":
+        elif sample_sort == "name_split":
             return self.get_name_sample(ps, "local" in param)
-        elif sort == "func_whole":
+        elif sample_sort == "func_whole":
             return self.get_func_all()
 
-    def get_top_generic(self, sort, ps=None, param={}, top_size=10):
-        return get_top(self.get_sample_generic(sort, ps, param), top_size)
+    def get_top_generic(self, sample_sort, ps=None, param={}, top_size=10):
+        return get_top(self.get_sample_generic(sample_sort, ps, param),
+                       top_size)
 
 
-class PyWordStatLocal(BaseWordStat):
+class LocalPyWordStat(BaseWordStat):
     '''Calculates statistics for python project
     given as a directory on disk'''
 
@@ -167,41 +158,49 @@ class PyWordStatLocal(BaseWordStat):
         return chain(*(ast.walk(t) for t in self._trees()))
 
 
+class RemotePyWordStat(LocalPyWordStat):
+    def __init__(self, repo_path):
+        if repo_path.startswith("http://") or \
+                repo_path.startswith("https://") or \
+                repo_path.startswith("ssh://"):
+            repo_path = repo_path.strip("/")
+            path = os.path.join(os.getcwd(), repo_path.split("/")[-1])
+            try:
+                Repo.clone_from(repo_path, path)
+            except GitCommandError:
+                print("{} already exists, skipping".format(path))
+        else:
+            path = repo_path
+        super().__init__(path)
+
+
+class ReportGenerator:
+    def __init__(self, word_stat):
+        if isinstance(word_stat, BaseWordStat):
+            self.word_stat = word_stat
+        elif isinstance(word_stat, str):
+            self.word_stat = RemotePyWordStat(word_stat)
+
+    def generate(self, format="console", sample_sort="func_split",
+                 ps="VB", param={}, top_size=10):
+        words = list(self.word_stat.get_sample_generic(sample_sort, ps, param))
+        if format == "console":
+            out_s = 'total {} words, {} unique'
+            print(out_s.format(len(words), len(set(words))))
+            for word, occurence in get_top(words, top_size):
+                print(word, occurence)
+
+
 def print_proj_stats():
     '''Prints verbs and funcion names statistics for
     predefined set of projects found in current directory'''
 
-    def print_word_stat(words, top_size):
-        print('total %s words, %s unique' % (len(words), len(set(words))))
-        for word, occurence in get_top(words, top_size):
-            print(word, occurence)
-
-    projects = [
-            'dclnt',
-            'django',
-            'flask',
-            'pyramid',
-            'reddit',
-            'requests',
-            'sqlalchemy',
-    ]
-    p_verbs = []
-    p_func = []
-    p_names = []
-    for project in projects:
-        path = os.path.join('.', project)
-        proj_stat = PyWordStatLocal(path)
-        p_verbs += proj_stat.get_func_sample("VB")
-        p_func += proj_stat.get_func_all()
-        p_names += proj_stat.get_name_sample(ps="NN", local_asg=True)
-
-    top_size = 25
-    print('verbs statistics')
-    print_word_stat(p_verbs, top_size)
-    print('function name statistics')
-    print_word_stat(p_func, top_size)
-    print('names statistics')
-    print_word_stat(p_names, top_size)
+    project = 'django'
+    path = os.path.join('.', project)
+    proj_rep = ReportGenerator(path)
+    proj_rep.generate("console", "func_split", "VB")
+    proj_rep.generate("console", "func_whole")
+    proj_rep.generate("console", "name_split", "NN", ["local"])
 
 # Download NLTK package if not installed
 if not data.find('taggers/averaged_perceptron_tagger'):
