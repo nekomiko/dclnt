@@ -43,32 +43,42 @@ class PyWordStat:
         '''path: path to python project for which calculate statistics'''
         self.path = path
 
+    def get_project_files(self, ext='.py'):
+        '''Walks trough `self.path` and returns list of all files
+        which ends with `ext`'''
+        filenames = []
+        for dirname, dirs, files in os.walk(self.path, topdown=True):
+            for file in files:
+                if file.endswith(ext):
+                    filenames.append(os.path.join(dirname, file))
+        return filenames
+
+    def parse_file(self, filename):
+        '''Returns parsed AST of python file'''
+        tree = None
+        with open(filename, 'r', encoding='utf-8') as attempt_handler:
+            main_file_content = attempt_handler.read()
+        try:
+            tree = ast.parse(main_file_content)
+        except SyntaxError as e:
+            print(e)
+            tree = None
+        return tree
+
     def get_trees(self):
         '''Returns list of abstract syntax trees
         for every .py file in self.path.'''
-        filenames = []
-        trees = []
-        for dirname, dirs, files in os.walk(self.path, topdown=True):
-            for file in files:
-                if file.endswith('.py'):
-                    filenames.append(os.path.join(dirname, file))
-        print('total %s files' % len(filenames))
-        for filename in filenames:
-            with open(filename, 'r', encoding='utf-8') as attempt_handler:
-                main_file_content = attempt_handler.read()
-            try:
-                tree = ast.parse(main_file_content)
-            except SyntaxError as e:
-                print(e)
-                tree = None
-            trees.append(tree)
+        filenames = self.get_project_files()
+        print('total {} files'.format(len(filenames)))
+        trees = (self.parse_file(filename) for filename in filenames)
+        trees = [t for t in trees if t]
         print('trees generated')
         return trees
 
     def _trees(self):
         # Caching
         if not hasattr(self, '_trees_cache'):
-            self._trees_cache = [t for t in self.get_trees() if t]
+            self._trees_cache = self.get_trees()
         return self._trees_cache
 
     def _tree_nodes(self):
