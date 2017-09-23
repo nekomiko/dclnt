@@ -1,5 +1,4 @@
-from .dclnt import PyWordStat
+from .dclnt import main
 
-
-def stat(path):
-    return PyWordStat(path)
+if __name__ == "__main__":
+    main()

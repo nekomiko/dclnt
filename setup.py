@@ -7,6 +7,7 @@ setup(
     description="Natural language statistics for Python projects",
     install_requires=[
         'nltk',
+        'GitPython',
     ],
     licence="Apache 2.0",
 
