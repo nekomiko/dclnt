@@ -98,14 +98,16 @@ class BaseWordStat:
 
     def get_sample_generic(self, sample_sort, ps=None, param={}):
         '''Generic interface to all statistics (word lists)'''
-        if sample_sort == "func_split":
-            return self.get_func_sample(ps)
-        elif sample_sort == "name_split":
-            return self.get_name_sample(ps, "locals" in param)
-        elif sample_sort == "func_whole":
-            return self.get_func_all()
-        elif sample_sort == "name_whole":
-            return self.get_name_all("locals" in param)
+        if sample_sort == "func":
+            if ps is not None:
+                return self.get_func_sample(ps)
+            else:
+                return self.get_func_all()
+        elif sample_sort == "name":
+            if ps is not None:
+                return self.get_name_sample(ps, "locals" in param)
+            else:
+                return self.get_name_all("locals" in param)
 
     def get_top_generic(self, sample_sort, ps=None, param={}, top_size=10):
         '''Generic interface to all statistics'''
@@ -235,36 +237,27 @@ def parse_args():
 
 
 def get_report_param_from_args(args):
+    def get_arg(key, default=None, choice=None):
+        res = default
+        if args[key] is not None:
+            if choice is None:
+                res = args[key]
+            elif args[key] in choice:
+                res = args[key]
+        return res
+
     '''Converts cli arguments to parameters for ReportGenerator'''
-    report_type = "func"
-    path = ""
-    if args["path"] is not None:
-        path = args["path"]
-    if args["type"] is not None:
-        if args["type"] in ["func", "name"]:
-            report_type = args["type"]
-    report_word = "whole"
-    if args["word"] is not None:
-        if args["word"] in ["noun", "verb"]:
-            word_map = {"noun": "NN", "verb": "VB"}
-            report_word = word_map[args["word"]]
-    if report_word == "whole":
-        sample_sort = report_type + "_" + "whole"
-        ps = None
-    else:
-        sample_sort = report_type + "_" + "split"
-        ps = report_word
+    path = get_arg("path", "")
+    sample_sort = get_arg("type", "func", ["func", "name"])
+    ps = get_arg("word", None, ["noun", "verb"])
+    word_map = {"noun": "NN", "verb": "VB"}
+    ps = word_map.get(ps)
     param = []
-    if report_type == "name":
+    if sample_sort == "name":
         if args["locals"]:
             param = ["locals"]
-    format = "console"
-    if args["format"] is not None:
-        if args["format"] in ["console", "json", "csv"]:
-            format = args["format"]
-    output = None
-    if args["output"] is not None:
-        output = args["output"]
+    format = get_arg("format", "console", ["console", "json", "csv"])
+    output = get_arg("output")
     top_size = 10
     if args["top_size"] is not None:
         try:
