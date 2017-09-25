@@ -6,12 +6,14 @@ from logging import debug
 from git import Repo, GitCommandError
 
 from .util import get_top
-from .stat import get_name_sample, get_name_all, get_func_all, get_func_sample
+from . import pystat
 
 
 class BaseWordStat:
-    '''Common interface for statistics calculation.
-    Assumes _tree_nodes method returns iterator of AST nodes'''
+    '''Common interface for statistics calculation
+    self.get_tree_nodes should be implemented by subclass
+    self.stat should point to object implementing
+    interface similar to pystat module'''
     def get_tree_nodes():
         raise NotImplementedError
 
@@ -28,14 +30,14 @@ class BaseWordStat:
         tree_nodes = self.get_tree_nodes()
         if sample_sort == "func":
             if ps is not None:
-                return get_func_sample(tree_nodes, ps)
+                return self.stat.get_func_sample(tree_nodes, ps)
             else:
-                return get_func_all(tree_nodes)
+                return self.stat.get_func_all(tree_nodes)
         elif sample_sort == "name":
             if ps is not None:
-                return get_name_sample(tree_nodes, ps, "locals" in param)
+                return self.stat.get_name_sample(tree_nodes, ps, "locals" in param)
             else:
-                return get_name_all(tree_nodes, "locals" in param)
+                return self.stat.get_name_all(tree_nodes, "locals" in param)
 
     def get_top_generic(self, sample_sort, ps=None, param={}, top_size=10):
         '''Generic interface to all statistics'''
@@ -50,6 +52,7 @@ class LocalPyWordStat(BaseWordStat):
     def __init__(self, path):
         '''path: path to python project for which calculate statistics'''
         self.path = path
+        self.stat = pystat  
 
     def get_project_files(self, ext='.py'):
         '''Walks trough `self.path` and returns list of all files

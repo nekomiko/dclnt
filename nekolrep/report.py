@@ -9,6 +9,8 @@ from .util import get_top
 class ReportGenerator:
     '''Report generator for BaseWordStat'''
     def __init__(self, word_stat):
+        '''word_stat: can be BaseWordStat instance
+        or string containing path to project'''
         if isinstance(word_stat, BaseWordStat):
             self.word_stat = word_stat
         elif isinstance(word_stat, str):
