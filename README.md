@@ -1,4 +1,4 @@
-# Neko language statistics tool for Python projects.
+# NekoLRep: Neko language reports tool for Python projects.
 Following instruments is able to calulate some word-metrics for python project.
 
 ### Usage
