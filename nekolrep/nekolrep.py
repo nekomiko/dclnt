@@ -14,7 +14,7 @@ class BaseWordStat:
 
     def get_name_all(self, _locals=False):
         '''Returns generator of all identifiers names in project,
-        local_asg: optionally only local variables'''
+        _locals: optionally only local variables'''
         def local_filter(node):
             return isinstance(node.ctx, ast.Store)
 
@@ -57,7 +57,15 @@ class BaseWordStat:
         return get_top(self.get_all_func(), top_size)
 
     def get_sample_generic(self, sample_sort="func", ps=None, param={}):
-        '''Generic interface to all statistics (word lists)'''
+        '''Generic interface to all statistics (word lists)
+        sample_sort: type of sample
+            func - get sample of function names
+            name - get sample of all identifiers
+        ps: part of speech to filter
+            VB - verbs
+            NN - nouns
+        params: list of additinal parameters and flags
+            locals - view only local variables'''
         if sample_sort == "func":
             if ps is not None:
                 return self.get_func_sample(ps)
