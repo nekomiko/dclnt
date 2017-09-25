@@ -8,7 +8,6 @@ from .report import ReportGenerator
 
 
 def parse_args():
-    '''Parses argruments of report generator'''
     parser = argparse.ArgumentParser(description="NekoLRep cli")
     path_help = "Link to git repo or local filepath."
     parser.add_argument("path", help=path_help)
@@ -31,6 +30,7 @@ def parse_args():
 
 
 def get_report_param_from_args(args):
+    '''Converts cli arguments to parameters for ReportGenerator'''
     def get_arg(key, default=None, choice=None):
         res = default
         if args[key] is not None:
@@ -40,7 +40,6 @@ def get_report_param_from_args(args):
                 res = args[key]
         return res
 
-    '''Converts cli arguments to parameters for ReportGenerator'''
     path = get_arg("path", "")
     sample_sort = get_arg("type", "func", ["func", "name"])
     ps = get_arg("word", None, ["noun", "verb"])

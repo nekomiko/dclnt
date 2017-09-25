@@ -18,7 +18,6 @@ class ReportGenerator:
 
     def generate(self, format="console", sample_sort="func",
                  ps="VB", param={}, top_size=10):
-        '''Generator of all reports'''
         words = list(self.word_stat.get_sample_generic(sample_sort, ps, param))
         top_words = get_top(words, top_size)
         if format == "console":

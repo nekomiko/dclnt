@@ -29,7 +29,7 @@ def check_word_ps(word, ps=None):
 
 def get_name_all(tree_nodes, _locals=False):
     '''Returns generator of all identifiers names in project,
-     _locals: optionally only local variables'''
+     _locals: only local variables'''
     def local_filter(node):
         return isinstance(node.ctx, ast.Store)
 
@@ -54,8 +54,8 @@ def extract_words_from_ids(ident, ps):
 
 
 def get_name_sample(tree_nodes, ps=None, _locals=False):
-    '''Get names of identifiers, filter out specified
-    part of speech(`ps`), local variables (`_locals`)'''
+    '''Returns list of all `ps` part of speech occuring
+    as word in identifiers or only local variables (`_locals`)'''
     return extract_words_from_ids(get_name_all(tree_nodes, _locals), ps)
 
 

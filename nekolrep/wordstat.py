@@ -21,7 +21,7 @@ class BaseWordStat:
         '''Generic interface to all statistics (word lists)
         sample_sort: type of sample
             func - get sample of function names
-            name - get sample of all identifiers
+            name - get sample of identifiers
         ps: part of speech to filter
             VB - verbs
             NN - nouns
@@ -40,17 +40,15 @@ class BaseWordStat:
                 return self.stat.get_name_all(tree_nodes, "locals" in param)
 
     def get_top_generic(self, sample_sort, ps=None, param={}, top_size=10):
-        '''Generic interface to all statistics'''
         return get_top(self.get_sample_generic(sample_sort, ps, param),
                        top_size)
 
 
 class LocalPyWordStat(BaseWordStat):
-    '''Calculates statistics for python project
-    given as a directory on disk'''
+    '''Calculates statistics for path of python project'''
 
     def __init__(self, path):
-        '''path: path to python project for which calculate statistics'''
+        '''path: path to python project for which statistics calculated'''
         self.path = path
         self.stat = pystat  
 
@@ -65,7 +63,7 @@ class LocalPyWordStat(BaseWordStat):
         return filenames
 
     def parse_file(self, filename):
-        '''Returns parsed AST of python file'''
+        '''Returns parsed AST of from python file'''
         tree = None
         with open(filename, 'r', encoding='utf-8') as attempt_handler:
             main_file_content = attempt_handler.read()
