@@ -1,10 +1,13 @@
-# Natural language statistics tool for Python projects.
+# Neko language statistics tool for Python projects.
 Following instruments is able to calulate some word-metrics for python project.
 
 ### Usage
-`python3 -m dclnt <PATH_TO_GITHUB_REPO>`
+`python3 -m nekolrep <PATH_TO_GITHUB_REPO>`
 
 See builtin help for arguments.
+
+### Installation
+`python3 setup.py install` or alternatively `pip3 install .`
 
 ### Dependencies
 Python3, `nltk` -- Natural Language Toolkit, `GitPython` -- git library

@@ -96,7 +96,7 @@ class BaseWordStat:
         in project'''
         return get_top(self.get_all_func(), top_size)
 
-    def get_sample_generic(self, sample_sort, ps=None, param={}):
+    def get_sample_generic(self, sample_sort="func", ps=None, param={}):
         '''Generic interface to all statistics (word lists)'''
         if sample_sort == "func":
             if ps is not None:
@@ -156,7 +156,6 @@ class LocalPyWordStat(BaseWordStat):
         return trees
 
     def _trees(self):
-        # Caching
         if not hasattr(self, '_trees_cache'):
             self._trees_cache = self.get_trees()
         return self._trees_cache
@@ -188,7 +187,7 @@ class ReportGenerator:
         elif isinstance(word_stat, str):
             self.word_stat = RemotePyWordStat(word_stat)
 
-    def generate(self, format="console", sample_sort="func_split",
+    def generate(self, format="console", sample_sort="func",
                  ps="VB", param={}, top_size=10):
         '''Generator of all reports'''
         words = list(self.word_stat.get_sample_generic(sample_sort, ps, param))
@@ -215,7 +214,7 @@ class ReportGenerator:
 
 def parse_args():
     '''Parses argruments of report generator'''
-    parser = argparse.ArgumentParser(description="NLRep cli")
+    parser = argparse.ArgumentParser(description="NekoLRep cli")
     path_help = "Link to git repo or local filepath."
     parser.add_argument("path", help=path_help)
     type_help = '''Type of report:
@@ -280,21 +279,12 @@ def main():
         f.close()
 
 
-def print_proj_stats():
-    '''Prints verbs and funcion names statistics for
-    predefined set of projects found in current directory'''
-
-    project = 'django'
-    path = os.path.join('.', project)
-    proj_rep = ReportGenerator(path)
-    print(proj_rep.generate("json", "func_split", "VB"))
-    print(proj_rep.generate("csv", "func_whole"))
-    print(proj_rep.generate("console", "name_split", "NN", ["locals"]))
-
-# Download NLTK package if not installed
-if not data.find('taggers/averaged_perceptron_tagger'):
-    download('averaged_perceptron_tagger')
+def download_nltk_dependency():
+    # Download NLTK package if not installed
+    if not data.find('taggers/averaged_perceptron_tagger'):
+        download('averaged_perceptron_tagger')
 
 if __name__ == "__main__":
     # print_proj_stats()
+    download_nltk_dependency()
     main()

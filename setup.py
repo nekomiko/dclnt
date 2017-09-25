@@ -1,8 +1,8 @@
 from setuptools import setup
 
 setup(
-    name='dclnt',
-    packages=['dclnt'],
+    name='nekolrep',
+    packages=['nekolrep'],
     version="0.0.1",
     description="Natural language statistics for Python projects",
     install_requires=[
