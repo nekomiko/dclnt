@@ -4,57 +4,16 @@ from itertools import chain
 from logging import debug
 
 from git import Repo, GitCommandError
-from .util import flat, is_name, is_magic_method, \
-        check_word_ps, is_func, get_top
+
+from .util import get_top
+from .stat import get_name_sample, get_name_all, get_func_all, get_func_sample
 
 
 class BaseWordStat:
     '''Common interface for statistics calculation.
     Assumes _tree_nodes method returns iterator of AST nodes'''
-
-    def get_name_all(self, _locals=False):
-        '''Returns generator of all identifiers names in project,
-        _locals: optionally only local variables'''
-        def local_filter(node):
-            return isinstance(node.ctx, ast.Store)
-
-        def always_true(node):
-            return True
-
-        filter_names = local_filter if _locals else always_true
-        return (node.id for node in self._tree_nodes()
-                if is_name(node) and filter_names(node))
-
-    def extract_words_from_ids(self, ident, ps):
-        '''Extracts words by splitting identifiers
-        and filters part of speech specified by `ps`'''
-        all_names = (f for f in ident
-                     if not is_magic_method(f))
-
-        def split_and_check(name):
-            return [word for word in name.split('_')
-                    if word and check_word_ps(word, ps)]
-        return flat([split_and_check(name) for name in all_names])
-
-    def get_name_sample(self, ps=None, _locals=False):
-        '''Get names of identifiers, filter out specified
-        part of speech(`ps`), local variables (`_locals`)'''
-        return self.extract_words_from_ids(self.get_name_all(_locals), ps)
-
-    def get_func_all(self):
-        '''Get iterator of all nonmagic functions'''
-        return (node.name.lower() for node in self._tree_nodes()
-                if is_func(node) and (not is_magic_method(node.name)))
-
-    def get_func_sample(self, ps=None):
-        '''Returns list of all `ps` part of speech occuring
-        as word in function names of project'''
-        return self.extract_words_from_ids(self.get_func_all(), ps)
-
-    def get_top_func_all(self, top_size=10):
-        '''Returns statistics of most common function names
-        in project'''
-        return get_top(self.get_all_func(), top_size)
+    def get_tree_nodes():
+        raise NotImplementedError
 
     def get_sample_generic(self, sample_sort="func", ps=None, param={}):
         '''Generic interface to all statistics (word lists)
@@ -66,16 +25,17 @@ class BaseWordStat:
             NN - nouns
         params: list of additinal parameters and flags
             locals - view only local variables'''
+        tree_nodes = self.get_tree_nodes()
         if sample_sort == "func":
             if ps is not None:
-                return self.get_func_sample(ps)
+                return get_func_sample(tree_nodes, ps)
             else:
-                return self.get_func_all()
+                return get_func_all(tree_nodes)
         elif sample_sort == "name":
             if ps is not None:
-                return self.get_name_sample(ps, "locals" in param)
+                return get_name_sample(tree_nodes, ps, "locals" in param)
             else:
-                return self.get_name_all("locals" in param)
+                return get_name_all(tree_nodes, "locals" in param)
 
     def get_top_generic(self, sample_sort, ps=None, param={}, top_size=10):
         '''Generic interface to all statistics'''
@@ -123,13 +83,10 @@ class LocalPyWordStat(BaseWordStat):
         debug('trees generated')
         return trees
 
-    def _trees(self):
+    def get_tree_nodes(self):
         if not hasattr(self, '_trees_cache'):
             self._trees_cache = self.get_trees()
-        return self._trees_cache
-
-    def _tree_nodes(self):
-        return chain(*(ast.walk(t) for t in self._trees()))
+        return chain(*(ast.walk(t) for t in self._trees_cache))
 
 
 class RemotePyWordStat(LocalPyWordStat):
