@@ -2,7 +2,7 @@ import json
 import csv
 import io
 
-from .nekolrep import BaseWordStat, RemotePyWordStat
+from .wordstat import BaseWordStat, RemotePyWordStat
 from .util import get_top
 
 

@@ -3,7 +3,7 @@ import argparse
 
 from nltk import download, data
 
-from .nekolrep import RemotePyWordStat
+from .wordstat import RemotePyWordStat
 from .report import ReportGenerator
 
 
@@ -61,7 +61,14 @@ def get_report_param_from_args(args):
     return (path, [format, sample_sort, ps, param, top_size], output)
 
 
+def download_nltk_dependency():
+    # Download NLTK package if not installed
+    if not data.find('taggers/averaged_perceptron_tagger'):
+        download('averaged_perceptron_tagger')
+
+
 def main():
+    download_nltk_dependency()
     args = parse_args()
     path, rep_params, output = get_report_param_from_args(args)
     rep_gen = ReportGenerator(RemotePyWordStat(path))
@@ -74,12 +81,6 @@ def main():
         f.close()
 
 
-def download_nltk_dependency():
-    # Download NLTK package if not installed
-    if not data.find('taggers/averaged_perceptron_tagger'):
-        download('averaged_perceptron_tagger')
-
 if __name__ == "__main__":
     # print_proj_stats()
-    download_nltk_dependency()
     main()
