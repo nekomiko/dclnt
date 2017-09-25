@@ -1,7 +1,8 @@
 import sys
 import argparse
 
-from .nekolrep import ReportGenerator, RemotePyWordStat
+from .nekolrep import RemotePyWordStat
+from .report import ReportGenerator
 from nltk import download, data
 
 def parse_args():

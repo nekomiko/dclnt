@@ -1,4 +1,4 @@
-from nekolrep.nekolrep import ReportGenerator
+from nekolrep.report import ReportGenerator
 import os
 
 
