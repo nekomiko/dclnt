@@ -3,7 +3,7 @@ import os
 from itertools import chain
 from logging import debug
 
-from git import Repo, GitCommandError
+from git import Repo
 
 from .util import get_top
 from . import pystat
@@ -35,7 +35,8 @@ class BaseWordStat:
                 return self.stat.get_func_all(tree_nodes)
         elif sample_sort == "name":
             if ps is not None:
-                return self.stat.get_name_sample(tree_nodes, ps, "locals" in param)
+                return self.stat.get_name_sample(tree_nodes, ps,
+                                                 "locals" in param)
             else:
                 return self.stat.get_name_all(tree_nodes, "locals" in param)
 
@@ -50,7 +51,13 @@ class LocalPyWordStat(BaseWordStat):
     def __init__(self, path):
         '''path: path to python project for which statistics calculated'''
         self.path = path
-        self.stat = pystat  
+        self.stat = pystat
+        if not os.path.exists(self.path):
+            raise FileNotFoundError(
+                    "project directory {} does not exists".format(path))
+        if not os.path.isdir(self.path):
+            raise NotADirectoryError("{} is not directory".format(path))
+
 
     def get_project_files(self, ext='.py'):
         '''Walks trough `self.path` and returns list of all files
@@ -96,10 +103,10 @@ class RemotePyWordStat(LocalPyWordStat):
         if repo_path.startswith(("http://", "https://", "ssh://")):
             repo_path = repo_path.strip("/")
             path = os.path.join(os.getcwd(), repo_path.split("/")[-1])
-            try:
+            if not os.path.exists(path):
                 Repo.clone_from(repo_path, path)
-            except GitCommandError:
-                debug("{} already exists, skipping".format(path))
+            else:
+                debug("path exists, skipping")
         else:
             path = repo_path
         super().__init__(path)

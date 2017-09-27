@@ -2,7 +2,7 @@ import sys
 import argparse
 
 from nltk import download, data
-
+from git import GitCommandError
 from .wordstat import RemotePyWordStat
 from .report import ReportGenerator
 
@@ -70,7 +70,18 @@ def main():
     download_nltk_dependency()
     args = parse_args()
     path, rep_params, output = get_report_param_from_args(args)
-    rep_gen = ReportGenerator(RemotePyWordStat(path))
+    try:
+        rep_gen = ReportGenerator(RemotePyWordStat(path))
+    except FileNotFoundError:
+        print("Error: path not found")
+        return
+    except NotADirectoryError:
+        print("Error: path should be a directory or URL")
+        return
+    except GitCommandError as g:
+        print("Error: git utility returned error")
+        print(g)
+        return
     if output:
         f = open(output, "w")
     else:
